@@ -1,0 +1,32 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: vulnerable-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bank
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql  # Make sure this volume is properly defined
+
+  flask-app:
+    build: .   # Build Flask app from Dockerfile
+    container_name: flask-app
+    restart: always
+    depends_on:
+      - mysql
+    ports:
+      - "8080:5000"
+    environment:
+      - FLASK_ENV=development
+    volumes:
+      - .:/app
+    command: flask run --host=0.0.0.0 --port=5000
+
+# This section properly defines the 'mysql_data' volume
+volumes:
+  mysql_data:

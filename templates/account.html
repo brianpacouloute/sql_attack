@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <div class="container">
+        <h2>Welcome, {{ user.username }}</h2>
+        <p>Your Balance: <strong>${{ user.balance }}</strong></p>
+
+        <h3>Transfer Funds</h3>
+        <form method="POST">
+            {% if user.username == "admin" %}
+                <!-- Admin can select the sender -->
+                <label for="sender">Select Sender:</label>
+                <select name="sender" required>
+                    {% for u in users %}
+                        <option value="{{ u.username }}">{{ u.username }}</option>
+                    {% endfor %}
+                </select>
+                <br><br>
+            {% else %}
+                <!-- Regular users always send from their own account (hidden input) -->
+                <input type="hidden" name="sender" value="{{ user.username }}">
+            {% endif %}
+
+            <label for="recipient">Recipient Username:</label>
+            {% if user.username == "admin" %}
+                <!-- Admin gets a dropdown for recipients -->
+                <select name="recipient" required>
+                    {% for u in users %}
+                        <option value="{{ u.username }}">{{ u.username }}</option>
+                    {% endfor %}
+                </select>
+            {% else %}
+                <!-- Regular users type recipient manually -->
+                <input type="text" name="recipient" required>
+            {% endif %}
+            <br><br>
+
+            <label>Amount:</label>
+            <input type="number" step="0.01" name="amount" required><br><br>
+            <input type="submit" value="Transfer">
+        </form>
+
+        {% if message %}
+        <p class="message">{{ message }}</p>
+        {% endif %}
+
+        <h3>Recent Transactions</h3>
+        <table>
+            <tr>
+                <th>Sender</th>
+                <th>Recipient</th>
+                <th>Amount</th>
+                <th>Timestamp</th>
+            </tr>
+            {% for transaction in transactions %}
+            <tr>
+                <td>{{ transaction.sender }}</td>
+                <td>{{ transaction.recipient }}</td>
+                <td>${{ transaction.amount }}</td>
+                <td>{{ transaction.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        {% if user.username == 'admin' %}
+        <h3>All User Balances</h3>
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Balance</th>
+            </tr>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td>${{ u.balance | default("0.00") }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h3>Admin Actions</h3>
+        <form method="POST" action="{{ url_for('reset_transactions') }}">
+            <button type="submit" class="danger">Reset Transactions</button>
+        </form>
+        {% endif %}
+
+        <a href="{{ url_for('logout') }}"><button class="logout">Logout</button></a>
+    </div>
+
+</body>
+</html>
